@@ -14,7 +14,13 @@ from . import core
 
 def add_common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--root")
-    p.add_argument("--scope", dest="scopes", action="append")
+    p.add_argument(
+        "--scope",
+        dest="scopes",
+        action="append",
+        choices=sorted(core.SCOPE_INCLUDES),
+        help="Preset search scope. Use --path for concrete files/directories.",
+    )
     p.add_argument("--path", dest="paths", action="append")
     p.add_argument("-g", "--glob", dest="include_globs", action="append")
     p.add_argument("--exclude", dest="exclude_globs", action="append")
@@ -30,10 +36,11 @@ def build_parser() -> argparse.ArgumentParser:
     f.add_argument("--term", dest="terms", action="append")
     f.add_argument("--match", choices=["any", "all"], default="any")
     f.add_argument("--regex", action="store_true")
-    f.add_argument("--max-hits", type=int)
-    f.add_argument("--per-file", type=int)
-    f.add_argument("--line-chars", type=int)
-    f.add_argument("--timeout", type=float)
+    f.add_argument("--max-hits", "--max-total-hits", dest="max_hits", type=int)
+    f.add_argument("--per-file", "--max-hits-per-file", dest="per_file", type=int)
+    f.add_argument("--line-chars", "--max-line-chars", dest="line_chars", type=int)
+    f.add_argument("--max-total-chars", type=int)
+    f.add_argument("--timeout", "--timeout-seconds", dest="timeout", type=float)
     f.add_argument("--files-only", action="store_true")
     f.add_argument("--offset", type=int, default=0)
     add_common(f)
@@ -41,12 +48,12 @@ def build_parser() -> argparse.ArgumentParser:
     fs.add_argument("query", nargs="?")
     fs.add_argument("--regex", action="store_true")
     fs.add_argument("--max-files", type=int)
-    fs.add_argument("--timeout", type=float)
+    fs.add_argument("--timeout", "--timeout-seconds", dest="timeout", type=float)
     add_common(fs)
     sym = sub.add_parser("symbol")
     sym.add_argument("name")
-    sym.add_argument("--max-hits", type=int)
-    sym.add_argument("--timeout", type=float)
+    sym.add_argument("--max-hits", "--max-total-hits", dest="max_hits", type=int)
+    sym.add_argument("--timeout", "--timeout-seconds", dest="timeout", type=float)
     add_common(sym)
     js = sub.add_parser("json")
     js.add_argument("query", nargs="?")
@@ -59,7 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     js.add_argument("--allow-large-files", action="store_true")
     js.add_argument("--max-records", type=int)
     js.add_argument("--max-files", type=int)
-    js.add_argument("--timeout", type=float)
+    js.add_argument("--timeout", "--timeout-seconds", dest="timeout", type=float)
     add_common(js)
     sc = sub.add_parser("self-check")
     sc.add_argument("--root")
@@ -84,7 +91,7 @@ def main(argv=None) -> int:
         raw = [a for a in raw if a != "--pretty"]
     ns = build_parser().parse_args(raw)
     if ns.cmd == "find":
-        res = core.cxs_find(query=ns.query, terms=ns.terms, match=ns.match, mode="regex" if ns.regex else "literal", root=ns.root, paths=ns.paths, scopes=ns.scopes, include_globs=ns.include_globs, exclude_globs=ns.exclude_globs, case_sensitive=ns.case_sensitive, max_total_hits=ns.max_hits, max_hits_per_file=ns.per_file, max_line_chars=ns.line_chars, timeout_seconds=ns.timeout, files_only=ns.files_only, offset=ns.offset)
+        res = core.cxs_find(query=ns.query, terms=ns.terms, match=ns.match, mode="regex" if ns.regex else "literal", root=ns.root, paths=ns.paths, scopes=ns.scopes, include_globs=ns.include_globs, exclude_globs=ns.exclude_globs, case_sensitive=ns.case_sensitive, max_total_hits=ns.max_hits, max_hits_per_file=ns.per_file, max_line_chars=ns.line_chars, max_total_chars=ns.max_total_chars, timeout_seconds=ns.timeout, files_only=ns.files_only, offset=ns.offset)
     elif ns.cmd == "files":
         res = core.cxs_files(query=ns.query, mode="regex" if ns.regex else "literal", root=ns.root, paths=ns.paths, scopes=ns.scopes, include_globs=ns.include_globs, exclude_globs=ns.exclude_globs, case_sensitive=ns.case_sensitive, max_files=ns.max_files, timeout_seconds=ns.timeout)
     elif ns.cmd == "symbol":
@@ -132,7 +139,12 @@ def shim_rg_main(argv=None) -> int:
                 paths.append(a)
             i += 1
         else:
-            res = core.cxs_find(terms=pats, mode=mode, paths=paths or None)
+            res = core.cxs_find(
+                query=pats[0],
+                terms=pats[1:],
+                mode=mode,
+                paths=paths or None,
+            )
             print(core.json_dumps(res))
             return 1 if res.get("status") == "error" else 0
     real = core.find_rg()

@@ -112,6 +112,53 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(res['hits'], [])
         res2 = core.cxs_json(query='r1', root=str(self.root), scopes=['runs'])
         self.assertEqual(len(res2['hits']), 1)
+    def test_cli_aliases_path_and_scope_validation(self):
+        cmd = [
+            sys.executable, '-m', 'cxs.cli',
+            'find', 'needle',
+            '--root', str(self.root),
+            '--path', 'docs/README.md',
+            '--max-total-hits', '1',
+            '--max-hits-per-file', '1',
+            '--max-line-chars', '80',
+            '--max-total-chars', '1000',
+        ]
+        proc = subprocess.run(cmd, cwd=str(ROOT), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        res = json.loads(proc.stdout)
+        self.assertEqual(len(res['hits']), 1)
+        self.assertEqual(res['hits'][0]['file'], 'docs/README.md')
+
+        bad_scope = subprocess.run(
+            [
+                sys.executable, '-m', 'cxs.cli',
+                'find', 'needle',
+                '--root', str(self.root),
+                '--scope', 'README.md',
+            ],
+            cwd=str(ROOT),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.assertNotEqual(bad_scope.returncode, 0)
+        self.assertIn('invalid choice', bad_scope.stderr)
+    def test_rg_shim_preserves_query(self):
+        proc = subprocess.run(
+            [
+                sys.executable, str(ROOT/'bin'/'rg'),
+                '-n', 'return', str(self.root/'src'/'app.py'),
+            ],
+            cwd=str(self.root),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        res = json.loads(proc.stdout)
+        self.assertEqual(res['query'], 'return')
+        self.assertEqual(res['terms'], ['return'])
+        self.assertEqual(res['hits'][0]['file'], 'src/app.py')
 
 class MCPTests(unittest.TestCase):
     def test_mcp_initialize_tools_list_and_terse(self):

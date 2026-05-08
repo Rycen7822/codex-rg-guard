@@ -6,5 +6,6 @@ build/
 dist/
 *.egg-info/
 codex-rg-guard.zip
+problem.md
 rust-version/target/
 rust-version/dist/

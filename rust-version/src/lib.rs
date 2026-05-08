@@ -2193,7 +2193,12 @@ pub fn shim_rg_main(args: &[String]) -> i32 {
                 }
             }
             let mut m = Map::new();
-            m.insert("terms".to_string(), json!(pats));
+            if let Some((first, rest)) = pats.split_first() {
+                m.insert("query".to_string(), json!(first));
+                if !rest.is_empty() {
+                    m.insert("terms".to_string(), json!(rest));
+                }
+            }
             m.insert("mode".to_string(), json!(mode));
             if !paths.is_empty() {
                 m.insert("paths".to_string(), json!(paths));

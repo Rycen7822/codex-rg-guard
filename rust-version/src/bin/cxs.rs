@@ -80,6 +80,64 @@ fn usage() {
     eprintln!("usage: cxs-rs [--pretty] <find|files|symbol|json|self-check> ...");
 }
 
+fn usage_for(cmd: Option<&str>) {
+    match cmd {
+        Some("find") => eprintln!(
+            "usage: cxs-rs [--pretty] find <query> [--scope docs|src|tests|config|analysis|runs|vendor|all] [--path FILE_OR_DIR] [--max-total-hits N] [--max-hits-per-file N] [--max-line-chars N] [--max-total-chars N]"
+        ),
+        Some("files") => eprintln!(
+            "usage: cxs-rs [--pretty] files [query] [--scope docs|src|tests|config|analysis|runs|vendor|all] [--path FILE_OR_DIR] [--max-files N]"
+        ),
+        Some("symbol") => eprintln!(
+            "usage: cxs-rs [--pretty] symbol <name> [--scope docs|src|tests|config|analysis|runs|vendor|all] [--path FILE_OR_DIR] [--max-total-hits N]"
+        ),
+        Some("json") => eprintln!(
+            "usage: cxs-rs [--pretty] json [query] [--scope config|analysis|runs|all] [--path FILE_OR_DIR] [--field NAME] [--filter key=value]"
+        ),
+        Some("self-check") => eprintln!("usage: cxs-rs [--pretty] self-check [--root DIR]"),
+        _ => usage(),
+    }
+}
+
+fn cli_error(error: &str, arg: Option<&str>, hint: Option<&str>) -> ! {
+    let mut out = Map::new();
+    out.insert("status".to_string(), json!("error"));
+    out.insert("error".to_string(), json!(error));
+    if let Some(arg) = arg {
+        out.insert("arg".to_string(), json!(arg));
+    }
+    if let Some(hint) = hint {
+        out.insert("hint".to_string(), json!(hint));
+    }
+    println!("{}", cxs::json_dumps(&Value::Object(out), false));
+    std::process::exit(2);
+}
+
+fn is_valid_scope(scope: &str) -> bool {
+    matches!(
+        scope,
+        "docs" | "src" | "tests" | "config" | "analysis" | "runs" | "vendor" | "all"
+    )
+}
+
+fn validate_scopes(args: &Map<String, Value>) {
+    let Some(Value::Array(scopes)) = args.get("scopes") else {
+        return;
+    };
+    for scope in scopes {
+        if let Some(s) = scope.as_str() {
+            let normalized = s.trim().to_lowercase();
+            if !normalized.is_empty() && !is_valid_scope(&normalized) {
+                cli_error(
+                    "invalid_scope",
+                    Some(s),
+                    Some("Use --path for files/directories, --glob for globs, or one of: docs, src, tests, config, analysis, runs, vendor, all."),
+                );
+            }
+        }
+    }
+}
+
 fn main() {
     let mut raw: Vec<String> = env::args().skip(1).collect();
     let pretty = raw.iter().any(|a| a == "--pretty");
@@ -89,6 +147,14 @@ fn main() {
         std::process::exit(2);
     }
     let cmd = raw.remove(0);
+    if cmd == "--help" || cmd == "-h" {
+        usage_for(None);
+        return;
+    }
+    if raw.iter().any(|a| a == "--help" || a == "-h") {
+        usage_for(Some(cmd.as_str()));
+        return;
+    }
     let mut args = Map::new();
     let op = match cmd.as_str() {
         "find" => {
@@ -114,25 +180,31 @@ fn main() {
                     "--regex" => {
                         args.insert("mode".to_string(), json!("regex"));
                     }
-                    "--max-hits" => {
+                    "--max-hits" | "--max-total-hits" => {
                         i += 1;
                         if let Some(v) = parse_num(raw.get(i).cloned()) {
                             args.insert("max_total_hits".to_string(), v);
                         }
                     }
-                    "--per-file" => {
+                    "--per-file" | "--max-hits-per-file" => {
                         i += 1;
                         if let Some(v) = parse_num(raw.get(i).cloned()) {
                             args.insert("max_hits_per_file".to_string(), v);
                         }
                     }
-                    "--line-chars" => {
+                    "--line-chars" | "--max-line-chars" => {
                         i += 1;
                         if let Some(v) = parse_num(raw.get(i).cloned()) {
                             args.insert("max_line_chars".to_string(), v);
                         }
                     }
-                    "--timeout" => {
+                    "--max-total-chars" => {
+                        i += 1;
+                        if let Some(v) = parse_num(raw.get(i).cloned()) {
+                            args.insert("max_total_chars".to_string(), v);
+                        }
+                    }
+                    "--timeout" | "--timeout-seconds" => {
                         i += 1;
                         if let Some(v) = parse_float(raw.get(i).cloned()) {
                             args.insert("timeout_seconds".to_string(), v);
@@ -147,7 +219,7 @@ fn main() {
                             args.insert("offset".to_string(), v);
                         }
                     }
-                    other if other.starts_with('-') => {}
+                    other if other.starts_with('-') => cli_error("unknown_arg", Some(other), None),
                     other => positional.push(other.to_string()),
                 }
                 i += 1;
@@ -176,13 +248,13 @@ fn main() {
                             args.insert("max_files".to_string(), v);
                         }
                     }
-                    "--timeout" => {
+                    "--timeout" | "--timeout-seconds" => {
                         i += 1;
                         if let Some(v) = parse_float(raw.get(i).cloned()) {
                             args.insert("timeout_seconds".to_string(), v);
                         }
                     }
-                    other if other.starts_with('-') => {}
+                    other if other.starts_with('-') => cli_error("unknown_arg", Some(other), None),
                     other => positional.push(other.to_string()),
                 }
                 i += 1;
@@ -201,19 +273,19 @@ fn main() {
                     continue;
                 }
                 match raw[i].as_str() {
-                    "--max-hits" => {
+                    "--max-hits" | "--max-total-hits" => {
                         i += 1;
                         if let Some(v) = parse_num(raw.get(i).cloned()) {
                             args.insert("max_total_hits".to_string(), v);
                         }
                     }
-                    "--timeout" => {
+                    "--timeout" | "--timeout-seconds" => {
                         i += 1;
                         if let Some(v) = parse_float(raw.get(i).cloned()) {
                             args.insert("timeout_seconds".to_string(), v);
                         }
                     }
-                    other if other.starts_with('-') => {}
+                    other if other.starts_with('-') => cli_error("unknown_arg", Some(other), None),
                     other => positional.push(other.to_string()),
                 }
                 i += 1;
@@ -276,13 +348,13 @@ fn main() {
                             args.insert("max_files".to_string(), v);
                         }
                     }
-                    "--timeout" => {
+                    "--timeout" | "--timeout-seconds" => {
                         i += 1;
                         if let Some(v) = parse_float(raw.get(i).cloned()) {
                             args.insert("timeout_seconds".to_string(), v);
                         }
                     }
-                    other if other.starts_with('-') => {}
+                    other if other.starts_with('-') => cli_error("unknown_arg", Some(other), None),
                     other => positional.push(other.to_string()),
                 }
                 i += 1;
@@ -303,6 +375,8 @@ fn main() {
                 if raw[i] == "--root" {
                     i += 1;
                     push_opt(&mut args, "root", raw.get(i).cloned());
+                } else if raw[i].starts_with('-') {
+                    cli_error("unknown_arg", Some(raw[i].as_str()), None);
                 }
                 i += 1;
             }
@@ -313,6 +387,7 @@ fn main() {
             std::process::exit(2);
         }
     };
+    validate_scopes(&args);
     let res = cxs::call_op(op, &Value::Object(args));
     println!("{}", cxs::json_dumps(&res, pretty));
     std::process::exit(

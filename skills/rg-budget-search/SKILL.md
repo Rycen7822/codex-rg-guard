@@ -1,14 +1,12 @@
 ---
 name: rg-budget-search
-description: Prefer this plugin over raw rg/grep for broad searches in large or many-file projects; keeps Codex context small.
+description: In large or many-file projects, prefer cxs over raw rg/grep to reduce context waste.
 ---
 
-Prefer MCP `cxs(op,args)` or CLI `cxs` instead of raw `rg`/`grep` when the project has many files, the search scope is broad, or raw search is likely to produce noisy/truncated output.
+In large or many-file projects, use MCP `cxs(op,args)` or CLI `cxs` before raw `rg`/`grep`.
 
-For small projects, known files, or narrow local checks, use normal file reads or direct shell tools instead.
+Default flow: `find(files_only:true)` to identify candidate files, `find(paths=[...])` to locate bounded line hits, then use Codex-native reads for the exact file or span.
 
-Ops: `find`, `files`, `symbol`, `json`, `self_check`.
+Use `--path` or `paths` for concrete files/directories. Use `--scope` or `scopes` only for presets: `docs`, `src`, `tests`, `config`, `analysis`, `runs`, `vendor`, `all`.
 
-Pattern: broad content search with `find(files_only:true)`, then `find(paths=[...])`, then use Codex-native file reading only for the exact span you need.
-
-Avoid `rg -n PATTERN .`, broad OR regexes, raw JSONL/log dumps, and `runs/vendor` unless required. If `truncated`, refine query/scope/path or continue `files_only` with `next_page.offset`.
+For small projects, known files, or narrow checks, normal file reads/direct shell tools are fine. If output is `truncated`, refine query/scope/path or continue files-only pagination with `next_page.offset`.

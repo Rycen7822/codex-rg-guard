@@ -274,6 +274,61 @@ fn cli_and_rg_shim_work() {
         .unwrap()
         .contains(&json!({"file":"docs/README.md"})));
 
+    let alias = Command::new(cxs_bin)
+        .args([
+            "find",
+            "needle",
+            "--root",
+            fx.root.to_str().unwrap(),
+            "--path",
+            "docs/README.md",
+            "--max-total-hits",
+            "1",
+            "--max-hits-per-file",
+            "1",
+            "--max-line-chars",
+            "80",
+            "--max-total-chars",
+            "1000",
+        ])
+        .output()
+        .unwrap();
+    assert!(alias.status.success());
+    let alias_json: Value = serde_json::from_slice(&alias.stdout).unwrap();
+    assert_eq!(alias_json["hits"].as_array().unwrap().len(), 1);
+    assert_eq!(alias_json["hits"][0]["file"], "docs/README.md");
+
+    let unknown = Command::new(cxs_bin)
+        .args([
+            "find",
+            "needle",
+            "--root",
+            fx.root.to_str().unwrap(),
+            "--not-a-real-flag",
+        ])
+        .output()
+        .unwrap();
+    assert!(!unknown.status.success());
+    let unknown_json: Value = serde_json::from_slice(&unknown.stdout).unwrap();
+    assert_eq!(unknown_json["error"], "unknown_arg");
+    assert_eq!(unknown_json["arg"], "--not-a-real-flag");
+
+    let bad_scope = Command::new(cxs_bin)
+        .args([
+            "find",
+            "needle",
+            "--root",
+            fx.root.to_str().unwrap(),
+            "--scope",
+            "README.md",
+        ])
+        .output()
+        .unwrap();
+    assert!(!bad_scope.status.success());
+    let bad_scope_json: Value = serde_json::from_slice(&bad_scope.stdout).unwrap();
+    assert_eq!(bad_scope_json["error"], "invalid_scope");
+    assert_eq!(bad_scope_json["arg"], "README.md");
+
     let shim_bin = env!("CARGO_BIN_EXE_rg");
     let shim = Command::new(shim_bin)
         .current_dir(&fx.root)
@@ -282,6 +337,8 @@ fn cli_and_rg_shim_work() {
         .unwrap();
     assert!(shim.status.success());
     let shim_json: Value = serde_json::from_slice(&shim.stdout).unwrap();
+    assert_eq!(shim_json["query"], "return");
+    assert_eq!(shim_json["terms"], json!(["return"]));
     assert_eq!(shim_json["hits"][0]["file"], "src/app.py");
 
     let self_check = cxs::cxs_self_check(&json!({"root":fx.root_arg()}));
