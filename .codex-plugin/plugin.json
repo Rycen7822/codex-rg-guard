@@ -1,0 +1,16 @@
+{
+  "name": "codex-rg-guard",
+  "version": "0.2.4",
+  "description": "Low-context rg tools for Codex.",
+  "license": "MIT",
+  "keywords": ["codex", "ripgrep", "mcp", "search"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Codex rg Guard",
+    "shortDescription": "Bounded rg search",
+    "developerName": "local",
+    "category": "Productivity",
+    "capabilities": ["Read"]
+  }
+}

@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+import fnmatch, os, re, sys
+from pathlib import Path
+
+def match_glob(p, g):
+    if g.startswith('!'):
+        g = g[1:]
+    cands = [p, './'+p]
+    return any(fnmatch.fnmatch(x, g) or (g.startswith('**/') and fnmatch.fnmatch(x, g[3:])) for x in cands)
+
+def list_files(paths, includes, excludes):
+    if not paths: paths = ['.']
+    out=[]
+    for base in paths:
+        bp=Path(base)
+        if bp.is_file():
+            rel=str(bp).replace('\\','/')
+            out.append(rel[2:] if rel.startswith('./') else rel)
+        elif bp.is_dir():
+            for root, dirs, files in os.walk(bp):
+                for f in files:
+                    p=str(Path(root)/f).replace('\\','/')
+                    if p.startswith('./'): p=p[2:]
+                    inc = True if not includes else any(match_glob(p,g) for g in includes)
+                    exc = any(match_glob(p,g) for g in excludes)
+                    if inc and not exc: out.append(p)
+    return sorted(set(out))
+
+def main(argv):
+    if '--version' in argv:
+        print('ripgrep fake-test')
+        return 0
+    files_mode='--files' in argv
+    files_with_matches=False
+    includes=[]; excludes=[]; paths=[]; pats=[]; fixed=False; ignore_case=False; with_filename=False; max_count=999999; max_columns=10**9; sep=':'
+    i=0
+    while i < len(argv):
+        a=argv[i]
+        if a == '--files': files_mode=True; i+=1; continue
+        if a in ('-l','--files-with-matches'): files_with_matches=True; i+=1; continue
+        if a in ('-g','--glob') and i+1<len(argv):
+            g=argv[i+1]
+            (excludes if g.startswith('!') else includes).append(g[1:] if g.startswith('!') else g)
+            i+=2; continue
+        if a in ('-e','--regexp') and i+1<len(argv): pats.append(argv[i+1]); i+=2; continue
+        if a in ('-F','--fixed-strings'): fixed=True; i+=1; continue
+        if a in ('-i','--ignore-case'): ignore_case=True; i+=1; continue
+        if a in ('-H','--with-filename'): with_filename=True; i+=1; continue
+        if a in ('-I','--no-filename'): with_filename=False; i+=1; continue
+        if a == '--max-count' and i+1<len(argv): max_count=int(argv[i+1]); i+=2; continue
+        if a == '--max-columns' and i+1<len(argv): max_columns=int(argv[i+1]); i+=2; continue
+        if a == '--field-match-separator' and i+1<len(argv): sep=argv[i+1]; i+=2; continue
+        if a.startswith('-'):
+            if a in ('-n','--line-number','--no-heading','--color=never','--max-columns-preview','--max-filesize'):
+                i += 2 if a == '--max-filesize' else 1
+            else:
+                i += 1
+            continue
+        if not files_mode and not pats:
+            pats.append(a)
+        else:
+            paths.append(a)
+        i+=1
+    files=list_files(paths or ['.'], includes, excludes)
+    if files_mode:
+        for p in files: print(p)
+        return 0
+    flags=re.I if ignore_case else 0
+    total=0
+    explicit_single_file = bool(paths) and len(paths) == 1 and Path(paths[0]).is_file()
+    for p in files:
+        c=0
+        try:
+            lines=Path(p).read_text(encoding='utf-8', errors='replace').splitlines()
+        except Exception:
+            continue
+        for n,line in enumerate(lines,1):
+            matched=False
+            for pat in pats:
+                if fixed:
+                    if (pat.lower() in line.lower()) if ignore_case else (pat in line): matched=True
+                else:
+                    try:
+                        if re.search(pat,line,flags): matched=True
+                    except re.error as e:
+                        print('rg: regex parse error: '+str(e), file=sys.stderr)
+                        return 2
+            if matched:
+                if files_with_matches:
+                    print(p)
+                    total+=1
+                    break
+                txt=line if len(line)<=max_columns else line[:max_columns]+'...'
+                if with_filename or not explicit_single_file:
+                    print(f'{p}{sep}{n}{sep}{txt}')
+                else:
+                    print(f'{n}{sep}{txt}')
+                c+=1; total+=1
+                if c>=max_count: break
+    return 0 if total else 1
+if __name__=='__main__':
+    raise SystemExit(main(sys.argv[1:]))
