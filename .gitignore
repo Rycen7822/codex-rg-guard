@@ -7,3 +7,4 @@ dist/
 *.egg-info/
 codex-rg-guard.zip
 rust-version/target/
+rust-version/dist/
