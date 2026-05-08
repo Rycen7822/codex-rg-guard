@@ -16,7 +16,6 @@ with raw matches, repeated snippets, or truncated shell output.
   <a href="https://github.com/Rycen7822/codex-rg-guard/releases"><img src="https://img.shields.io/badge/Download-Releases-FF6600?style=for-the-badge" alt="Releases"></a>
   <a href=".mcp.json"><img src="https://img.shields.io/badge/MCP-single%20tool-2ea44f?style=for-the-badge" alt="MCP: single tool"></a>
   <a href="rust-version/README.md"><img src="https://img.shields.io/badge/Runtime-Python%20%7C%20Rust-5865F2?style=for-the-badge" alt="Runtime: Python and Rust"></a>
-  <a href="https://github.com/Rycen7822/codex-rg-guard/stargazers"><img src="https://img.shields.io/github/stars/Rycen7822/codex-rg-guard?style=for-the-badge&color=FFD700&label=Stars" alt="Stars"></a>
 </p>
 
 > This project is intended for large or many-file projects where raw `rg` /
