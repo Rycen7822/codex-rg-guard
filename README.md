@@ -7,9 +7,11 @@
 Use a budgeted MCP search tool before broad repository searches flood the model
 with raw matches, repeated snippets, or truncated shell output.
 
-![MCP](https://img.shields.io/badge/MCP-single%20tool-2ea44f)
-![Runtime](https://img.shields.io/badge/runtime-Python%20%7C%20Rust-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![Documentation](https://img.shields.io/badge/Documentation-README-blue)](README.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Releases](https://img.shields.io/github/v/release/Rycen7822/codex-rg-guard?label=Releases)](https://github.com/Rycen7822/codex-rg-guard/releases)
+[![MCP](https://img.shields.io/badge/MCP-single%20tool-2ea44f)](.mcp.json)
+[![Runtime](https://img.shields.io/badge/Runtime-Python%20%7C%20Rust-blue)](rust-version/README.md)
 
 </div>
 
