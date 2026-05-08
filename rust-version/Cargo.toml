@@ -1,0 +1,26 @@
+[package]
+name = "codex-rg-guard"
+version = "0.2.4"
+edition = "2021"
+license = "MIT"
+
+[lib]
+name = "cxs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cxs-rs"
+path = "src/bin/cxs.rs"
+
+[[bin]]
+name = "cxs-mcp-server-rs"
+path = "src/bin/cxs_mcp_server.rs"
+
+[[bin]]
+name = "rg"
+path = "src/bin/rg.rs"
+
+[dependencies]
+csv = "1.4"
+regex = "1.12"
+serde_json = "1.0"

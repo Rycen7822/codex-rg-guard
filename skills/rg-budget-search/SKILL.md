@@ -1,9 +1,11 @@
 ---
 name: rg-budget-search
-description: Use before raw rg/grep/cat when searching files; keeps Codex context small.
+description: Prefer this plugin over raw rg/grep for broad searches in large or many-file projects; keeps Codex context small.
 ---
 
-Use MCP `cxs(op,args)` or CLI `cxs` before raw search.
+Prefer MCP `cxs(op,args)` or CLI `cxs` instead of raw `rg`/`grep` when the project has many files, the search scope is broad, or raw search is likely to produce noisy/truncated output.
+
+For small projects, known files, or narrow local checks, use normal file reads or direct shell tools instead.
 
 Ops: `find`, `files`, `symbol`, `json`, `self_check`.
 

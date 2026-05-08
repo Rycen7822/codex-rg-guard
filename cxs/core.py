@@ -158,7 +158,7 @@ class Budget:
     max_hits_per_file: int = 999
     max_line_chars: int = 240
     max_total_chars: int = 12000
-    timeout_seconds: float = 3.0
+    timeout_seconds: float = 5.0
     process_output_bytes: int = 2_000_000
 
     # Clamp bounds for user-provided budget arguments. Keep these here so the
@@ -408,7 +408,10 @@ def run_lines(
                 pass
             sleep_for = max(
                 DEFAULT_BUDGET.selector_min_sleep_seconds,
-                min(DEFAULT_BUDGET.selector_max_sleep_seconds, deadline - time.monotonic()),
+                min(
+                    DEFAULT_BUDGET.selector_max_sleep_seconds,
+                    deadline - time.monotonic(),
+                ),
             )
             events = sel.select(sleep_for)
             if not events and proc.poll() is not None:
@@ -434,7 +437,9 @@ def run_lines(
                             line_limit_hit = True
                             break
                 else:
-                    remaining_err = max(0, DEFAULT_BUDGET.stderr_capture_bytes - len(err))
+                    remaining_err = max(
+                        0, DEFAULT_BUDGET.stderr_capture_bytes - len(err)
+                    )
                     err.extend(chunk[:remaining_err])
             if proc.poll() is not None and not events:
                 break
@@ -565,7 +570,9 @@ def make_find_files_next(
 def make_find_next_meta(
     files: Sequence[Dict[str, str]], batch_size: Optional[int] = None
 ) -> Dict[str, Any]:
-    batch_size = DEFAULT_BUDGET.next_files_batch_size if batch_size is None else batch_size
+    batch_size = (
+        DEFAULT_BUDGET.next_files_batch_size if batch_size is None else batch_size
+    )
     total = len(files)
     return {
         "batch_size": batch_size,
@@ -623,13 +630,16 @@ def cxs_find_files_only(
         stderr = proc.stderr
         bytes_read += proc.bytes_read
         if proc.returncode in (0, 1):
-            candidates, _, collect_truncated, candidate_count, candidate_has_more = collect_file_hits(
-                proc.lines,
-                line_limit,
-                max(
-                    DEFAULT_BUDGET.min_files_only_candidate_chars,
-                    max_total_chars * DEFAULT_BUDGET.files_only_candidate_char_multiplier,
-                ),
+            candidates, _, collect_truncated, candidate_count, candidate_has_more = (
+                collect_file_hits(
+                    proc.lines,
+                    line_limit,
+                    max(
+                        DEFAULT_BUDGET.min_files_only_candidate_chars,
+                        max_total_chars
+                        * DEFAULT_BUDGET.files_only_candidate_char_multiplier,
+                    ),
+                )
             )
             truncated = (
                 proc.timed_out
@@ -690,7 +700,9 @@ def cxs_find_files_only(
                 seen.add(rel)
                 total_chars += add
                 files.append({"file": rel})
-            seen_files = matched_files if not has_more else max(matched_files, candidate_count)
+            seen_files = (
+                matched_files if not has_more else max(matched_files, candidate_count)
+            )
     else:
         proc = run_lines(
             build_rg_files_with_matches_cmd(
@@ -768,7 +780,10 @@ def cxs_find_files_only(
         out["next"] = nexts
         out["next_meta"] = make_find_next_meta(files)
     if has_more:
-        out["next_page"] = {"offset": offset + len(files), "max_total_hits": max_total_hits}
+        out["next_page"] = {
+            "offset": offset + len(files),
+            "max_total_hits": max_total_hits,
+        }
     if rejected:
         out["rejected_paths"] = list(rejected)
     if warnings:
@@ -952,7 +967,9 @@ def cxs_find(
         file_counts[file_s] = file_counts.get(file_s, 0) + 1
         total_chars += add
         hits.append({"file": file_s, "line": line, "snippet": snippet})
-    files_at_hit_limit = sorted(f for f, count in file_counts.items() if count >= max_per)
+    files_at_hit_limit = sorted(
+        f for f, count in file_counts.items() if count >= max_per
+    )
     limit_reasons: List[str] = []
     if proc.timed_out:
         limit_reasons.append("timeout")
@@ -1168,7 +1185,10 @@ def flatten_text(rec: Any, search_large_fields: bool = False) -> str:
             if not search_large_fields and LARGE_FIELD_PAT.search(key):
                 return
             s = str(x)
-            if len(s) > DEFAULT_BUDGET.json_large_scalar_skip_chars and not search_large_fields:
+            if (
+                len(s) > DEFAULT_BUDGET.json_large_scalar_skip_chars
+                and not search_large_fields
+            ):
                 return
             parts.append(s[: DEFAULT_BUDGET.json_flatten_value_chars])
 

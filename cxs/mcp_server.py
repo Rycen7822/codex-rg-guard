@@ -29,7 +29,7 @@ def tool_defs() -> List[Dict[str, Any]]:
     # One tool keeps the MCP tool-list context small.
     return [{
         "name": "cxs",
-        "description": "Low-context rg search.",
+        "description": "Prefer over raw rg/grep for broad searches in many-file projects.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -81,7 +81,7 @@ def handle(msg: Dict[str, Any]) -> Dict[str, Any] | None:
     if method == "initialize":
         requested = params.get("protocolVersion") or PROTOCOL_VERSION
         proto = requested if requested in {"2025-06-18", "2025-03-26", "2024-11-05"} else PROTOCOL_VERSION
-        return result(rid, {"protocolVersion": proto, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": SERVER_INFO, "instructions": "Broad content search: find(files_only:true), then find(paths) for bounded line hits; read exact files or spans outside cxs only after a concrete file/line is known."})
+        return result(rid, {"protocolVersion": proto, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": SERVER_INFO, "instructions": "In large or many-file projects, prefer cxs over raw rg/grep for broad searches. For known files or small scopes, read directly. Broad search: find(files_only:true), then find(paths) for bounded line hits."})
     if method == "notifications/initialized":
         return None
     if method == "ping":

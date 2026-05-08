@@ -1,6 +1,6 @@
 # Codex rg Guard
 
-Low-context Codex plugin for bounded `rg` search.
+Low-context Codex plugin that should be preferred over raw `rg`/`grep` for broad searches in large or many-file projects.
 
 ## What it ships
 
@@ -10,6 +10,11 @@ Low-context Codex plugin for bounded `rg` search.
 - `bin/rg`: optional raw `rg` shim.
 
 The Skill and MCP tool descriptions are intentionally terse to avoid injecting large instruction blocks into Codex.
+
+Prefer this plugin over raw `rg`/`grep` for broad searches across many files,
+especially when raw search would flood the model context or hit output limits.
+For small projects, known files, or narrow local checks, normal file reads and
+direct shell tools are usually simpler.
 
 ## Requirements
 
@@ -48,7 +53,7 @@ Codex sees only one tool:
 {"op":"find","args":{"query":"ExactIdentifier","scopes":["docs","analysis"]}}
 ```
 
-For broad content search, first ask for files only:
+For broad content search in a large or many-file project, first ask for files only:
 
 ```json
 {"op":"find","args":{"query":"ExactIdentifier","scopes":["docs","src"],"files_only":true}}
