@@ -7,13 +7,17 @@
 Use a budgeted MCP search tool before broad repository searches flood the model
 with raw matches, repeated snippets, or truncated shell output.
 
-[![Documentation](https://img.shields.io/badge/Documentation-README-blue)](README.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Releases](https://img.shields.io/github/v/release/Rycen7822/codex-rg-guard?label=Releases)](https://github.com/Rycen7822/codex-rg-guard/releases)
-[![MCP](https://img.shields.io/badge/MCP-single%20tool-2ea44f)](.mcp.json)
-[![Runtime](https://img.shields.io/badge/Runtime-Python%20%7C%20Rust-blue)](rust-version/README.md)
-
 </div>
+
+<br/>
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/Docs-README-FFD700?style=for-the-badge" alt="Documentation"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
+  <a href="https://github.com/Rycen7822/codex-rg-guard/releases"><img src="https://img.shields.io/badge/Download-Releases-FF6600?style=for-the-badge" alt="Releases"></a>
+  <a href=".mcp.json"><img src="https://img.shields.io/badge/MCP-single%20tool-2ea44f?style=for-the-badge" alt="MCP: single tool"></a>
+  <a href="rust-version/README.md"><img src="https://img.shields.io/badge/Runtime-Python%20%7C%20Rust-5865F2?style=for-the-badge" alt="Runtime: Python and Rust"></a>
+  <a href="https://github.com/Rycen7822/codex-rg-guard/stargazers"><img src="https://img.shields.io/github/stars/Rycen7822/codex-rg-guard?style=for-the-badge&color=FFD700&label=Stars" alt="Stars"></a>
+</p>
 
 > This project is intended for large or many-file projects where raw `rg` /
 > `grep` can waste Codex context. For known files, tiny repositories, or narrow
