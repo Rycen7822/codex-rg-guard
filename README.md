@@ -61,19 +61,19 @@ plugin for itself.
 Rust prebuilt package, recommended for normal use:
 
 ```text
-Install Codex rg Guard for yourself globally using the Rust prebuilt package `codex-rg-guard-rust-0.2.4-x86_64-unknown-linux-gnu.tar.gz` from the v0.2.4 GitHub release. Put it under `~/.codex/plugins/codex-rg-guard`, enable `codex-rg-guard@local-personal`, register MCP `cxs-rg-guard` to `~/.codex/plugins/codex-rg-guard/bin/cxs-mcp-server`, and verify with `cxs --help`, `codex mcp list`, and MCP `self_check`.
+Install Codex rg Guard for yourself globally from repo `https://github.com/Rycen7822/codex-rg-guard`. Use the Rust prebuilt asset `https://github.com/Rycen7822/codex-rg-guard/releases/download/v0.2.4/codex-rg-guard-rust-0.2.4-x86_64-unknown-linux-gnu.tar.gz`, install it under `~/.codex/plugins/codex-rg-guard`, enable `codex-rg-guard@local-personal`, register MCP `cxs-rg-guard` to `~/.codex/plugins/codex-rg-guard/bin/cxs-mcp-server`, and verify with `cxs --help`, `codex mcp list`, and MCP `self_check`.
 ```
 
 Python version, for editing or debugging the original implementation:
 
 ```text
-Install the Python version of Codex rg Guard for yourself from `codex-rg-guard.zip` or source, not the Rust package. Put it under `~/.codex/plugins/codex-rg-guard`, register MCP `cxs-rg-guard` with `python3 ~/.codex/plugins/codex-rg-guard/mcp/cxs_mcp_server.py`, and verify the Python CLI/MCP path.
+Install the Python/source version of Codex rg Guard for yourself from repo `https://github.com/Rycen7822/codex-rg-guard`, not the Rust prebuilt package. Put the source tree under `~/.codex/plugins/codex-rg-guard`, register MCP `cxs-rg-guard` with `python3 ~/.codex/plugins/codex-rg-guard/mcp/cxs_mcp_server.py`, and verify the Python CLI/MCP path.
 ```
 
 Rust from source, for platform-specific builds:
 
 ```text
-Build Codex rg Guard from source for your platform with `cd rust-version && cargo build --release --bins`, package/install it with `rust-version/scripts/package-plugin.sh`, then register the installed Rust MCP binary and verify.
+Build Codex rg Guard from source for your platform by cloning `https://github.com/Rycen7822/codex-rg-guard`, then running `cd rust-version && cargo build --release --bins`. Package/install it with `rust-version/scripts/package-plugin.sh`, register the installed Rust MCP binary, and verify.
 ```
 
 ### Rust Prebuilt Package
